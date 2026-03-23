@@ -1,9 +1,9 @@
 const canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
-//Obtiene las dimensiones de la pantalla actual
-const window_height = window.innerHeight;
-const window_width = window.innerWidth;
+//Obtiene las dimensiones de la pantalla actual (ajustada a la mitad)
+const window_height = window.innerHeight / 2;
+const window_width = window.innerWidth / 2;
 
 //El canvas tiene las mismas dimensiones que la pantalla
 canvas.height = window_height;
@@ -41,27 +41,29 @@ class Circle {
   }
 
   update(context) {
-    //context.clearRect(0, 0, window_width, window_height);
-
     this.draw(context);
 
-    //Si el círculo supera el margen derecho entonces se mueve a la izquierda
+    // DERECHA
     if (this.posX + this.radius > window_width) {
+      this.posX = window_width - this.radius;
       this.dx = -this.dx;
     }
 
-    //Si el círculo supera el margen izquierdo entonces se mueve a la derecha
+    // IZQUIERDA
     if (this.posX - this.radius < 0) {
+      this.posX = this.radius;
       this.dx = -this.dx;
     }
 
-    //Si el círculo supera el margen superior entonces se mueve hacia abajo
+    // ARRIBA
     if (this.posY - this.radius < 0) {
+      this.posY = this.radius;
       this.dy = -this.dy;
     }
 
-    //Si el círculo supera el margen inferior entonces se mueve hacia arriba
+    // ABAJO
     if (this.posY + this.radius > window_height) {
+      this.posY = window_height - this.radius;
       this.dy = -this.dy;
     }
 
