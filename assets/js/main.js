@@ -7,7 +7,6 @@ let canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-// dirección de origen
 let direccion = "top";
 
 class Circle {
@@ -20,17 +19,16 @@ class Circle {
     this.dx = (Math.random() - 0.5) * 2;
     this.dy = 0;
 
-    this.gravity = 0.2;
-    this.friction = 0.6;
+    // variación ligera en física
+    this.gravity = 0.15 + Math.random() * 0.15;
+    this.friction = 0.65 + Math.random() * 0.2;
 
-    this.life = 1;
     this.rebotes = 0;
+    this.detener = false;
   }
 
   draw(ctx) {
     ctx.beginPath();
-
-    ctx.globalAlpha = this.life;
 
     ctx.fillStyle = this.color;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -41,29 +39,37 @@ class Circle {
     ctx.stroke();
 
     ctx.closePath();
-
-    ctx.globalAlpha = 1;
   }
 
   update(ctx) {
+    if (this.detener) {
+      this.draw(ctx);
+      return;
+    }
+
     this.draw(ctx);
 
-    // gravedad
-    this.dy += this.gravity;
+    // gravedad con ligera variación
+    this.dy += this.gravity * (0.95 + Math.random() * 0.1);
 
     // suelo
     if (this.y + this.radius >= canvasHeight) {
       this.y = canvasHeight - this.radius;
-      this.dy *= -this.friction;
+
+      this.dy *= -(this.friction + Math.random() * 0.05);
       this.rebotes++;
 
-      if (this.rebotes > 5) {
+      if (this.rebotes > 4) {
+        this.dy *= 0.7;
+      }
+
+      // corte de movimiento
+      if (Math.abs(this.dy) < 0.8 || this.rebotes > 8) {
         this.dy = 0;
-        this.life -= 0.02;
       }
     }
 
-    // paredes
+    // paredes laterales
     if (this.x + this.radius >= canvasWidth) {
       this.x = canvasWidth - this.radius;
       this.dx *= -1;
@@ -74,16 +80,30 @@ class Circle {
       this.dx *= -1;
     }
 
+    // fricción horizontal progresiva
+    if (this.rebotes > 3) {
+      this.dx *= 0.92;
+
+      if (Math.abs(this.dx) < 0.2) {
+        this.dx = 0;
+      }
+    }
+
     this.x += this.dx;
     this.y += this.dy;
+
+    // detener completamente
+    if (this.dy === 0 && Math.abs(this.dx) < 0.2) {
+      this.dx = 0;
+      this.detener = true;
+    }
   }
 }
 
 // lista
 let listaCirculos = [];
-let maxCirculos = 5;
 
-// generar según dirección
+// generar
 function crearCirculo() {
   let r = Math.random() * 30 + 20;
   let x, y;
@@ -93,24 +113,25 @@ function crearCirculo() {
   if (direccion === "top") {
     x = Math.random() * canvasWidth;
     y = -r;
+    dy = Math.random() * 2;
   }
 
   if (direccion === "bottom") {
     x = Math.random() * canvasWidth;
     y = canvasHeight + r;
-    dy = -3;
+    dy = -4 - Math.random() * 2;
   }
 
   if (direccion === "left") {
     x = -r;
     y = Math.random() * canvasHeight;
-    dx = Math.random() * 3;
+    dx = Math.random() * 4;
   }
 
   if (direccion === "right") {
     x = canvasWidth + r;
     y = Math.random() * canvasHeight;
-    dx = -Math.random() * 3;
+    dx = -Math.random() * 4;
   }
 
   let color = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.4)`;
@@ -124,7 +145,8 @@ function crearCirculo() {
 
 // aplicar cambios
 function aplicarCambios() {
-  maxCirculos = parseInt(document.getElementById("numCircles").value);
+  let cantidad = parseInt(document.getElementById("numCircles").value);
+
   canvasWidth = parseInt(document.getElementById("canvasWidth").value);
   canvasHeight = parseInt(document.getElementById("canvasHeight").value);
 
@@ -134,20 +156,10 @@ function aplicarCambios() {
   canvas.height = canvasHeight;
 
   listaCirculos = [];
-}
 
-// spawner
-function spawn() {
-  if (listaCirculos.length < maxCirculos) {
+  for (let i = 0; i < cantidad; i++) {
     listaCirculos.push(crearCirculo());
-
-    if (Math.random() < 0.3 && listaCirculos.length < maxCirculos) {
-      listaCirculos.push(crearCirculo());
-    }
   }
-
-  let delay = Math.random() * 1000 + 300;
-  setTimeout(spawn, delay);
 }
 
 // animación
@@ -155,16 +167,11 @@ function animar() {
   requestAnimationFrame(animar);
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  listaCirculos.forEach((c, i) => {
+  listaCirculos.forEach((c) => {
     c.update(ctx);
-
-    if (c.life <= 0) {
-      listaCirculos.splice(i, 1);
-    }
   });
 }
 
 // inicio
 aplicarCambios();
-spawn();
 animar();
