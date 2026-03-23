@@ -1,73 +1,77 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// Dimensiones iniciales
+// dimensiones
 let canvasWidth = 600;
 let canvasHeight = 400;
 
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-// Clase base (igual lógica del profe)
+// clase (basada en la anterior pero extendida)
 class Circle {
-  constructor(x, y, radius, color, label, speed) {
+  constructor(x, y, radius, color) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
-    this.label = label;
 
-    this.speed = speed;
+    this.dx = (Math.random() - 0.5) * 2;
+    this.dy = 0;
 
-    this.dx = speed;
-    this.dy = speed;
+    this.gravity = 0.4;
+    this.friction = 0.6;
+
+    this.life = 1;
+    this.rebotes = 0;
   }
 
   draw(ctx) {
     ctx.beginPath();
 
-    // relleno
+    ctx.globalAlpha = this.life;
+
     ctx.fillStyle = this.color;
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // borde
     ctx.strokeStyle = "rgba(255,255,255,0.8)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.closePath();
 
-    // texto
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = "14px Arial";
-    ctx.fillText(this.label, this.x, this.y);
+    ctx.globalAlpha = 1;
   }
 
   update(ctx) {
     this.draw(ctx);
 
-    // límites (misma lógica que ya traías)
-    if (this.x + this.radius > canvasWidth) {
+    // gravedad
+    this.dy += this.gravity;
+
+    // suelo
+    if (this.y + this.radius >= canvasHeight) {
+      this.y = canvasHeight - this.radius;
+
+      this.dy *= -this.friction;
+      this.rebotes++;
+
+      if (this.rebotes > 5) {
+        this.dy = 0;
+        this.life -= 0.03;
+      }
+    }
+
+    // paredes
+    if (this.x + this.radius >= canvasWidth) {
       this.x = canvasWidth - this.radius;
       this.dx *= -1;
     }
 
-    if (this.x - this.radius < 0) {
+    if (this.x - this.radius <= 0) {
       this.x = this.radius;
       this.dx *= -1;
-    }
-
-    if (this.y + this.radius > canvasHeight) {
-      this.y = canvasHeight - this.radius;
-      this.dy *= -1;
-    }
-
-    if (this.y - this.radius < 0) {
-      this.y = this.radius;
-      this.dy *= -1;
     }
 
     this.x += this.dx;
@@ -75,36 +79,46 @@ class Circle {
   }
 }
 
-// arreglo de círculos
+// arreglo principal
 let listaCirculos = [];
+let maxCirculos = 5;
 
-// generación
-function crearCirculos(num) {
-  listaCirculos = [];
+// generar uno
+function crearCirculo() {
+  let r = Math.random() * 30 + 20;
 
-  for (let i = 0; i < num; i++) {
-    let r = Math.random() * 30 + 20;
+  let x = Math.random() * (canvasWidth - 2 * r) + r;
+  let y = -r;
 
-    let x = Math.random() * (canvasWidth - 2 * r) + r;
-    let y = Math.random() * (canvasHeight - 2 * r) + r;
+  let color = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.4)`;
 
-    let color = `hsl(${Math.random() * 360}, 70%, 50%)`;
-    let speed = Math.random() * 2 + 1;
-
-    listaCirculos.push(new Circle(x, y, r, color, i + 1, speed));
-  }
+  return new Circle(x, y, r, color);
 }
 
-// aplicar cambios desde inputs
+// aplicar cambios
 function aplicarCambios() {
-  const cantidad = parseInt(document.getElementById("numCircles").value);
+  maxCirculos = parseInt(document.getElementById("numCircles").value);
   canvasWidth = parseInt(document.getElementById("canvasWidth").value);
   canvasHeight = parseInt(document.getElementById("canvasHeight").value);
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  crearCirculos(cantidad);
+  listaCirculos = [];
+}
+
+// spawner dinámico
+function spawn() {
+  if (listaCirculos.length < maxCirculos) {
+    listaCirculos.push(crearCirculo());
+
+    if (Math.random() < 0.3 && listaCirculos.length < maxCirculos) {
+      listaCirculos.push(crearCirculo());
+    }
+  }
+
+  let delay = Math.random() * 1000 + 200;
+  setTimeout(spawn, delay);
 }
 
 // animación
@@ -112,9 +126,16 @@ function animar() {
   requestAnimationFrame(animar);
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  listaCirculos.forEach(c => c.update(ctx));
+  listaCirculos.forEach((c, i) => {
+    c.update(ctx);
+
+    if (c.life <= 0) {
+      listaCirculos.splice(i, 1);
+    }
+  });
 }
 
 // inicio
 aplicarCambios();
+spawn();
 animar();
