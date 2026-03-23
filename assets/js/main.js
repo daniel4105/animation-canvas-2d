@@ -1,107 +1,120 @@
 const canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 
-//Obtiene las dimensiones de la pantalla actual (ajustada a la mitad)
-const window_height = window.innerHeight / 2;
-const window_width = window.innerWidth / 2;
+// Dimensiones iniciales
+let canvasWidth = 600;
+let canvasHeight = 400;
 
-//El canvas tiene las mismas dimensiones que la pantalla
-canvas.height = window_height;
-canvas.width = window_width;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 
-canvas.style.background = "#ff8";
-
+// Clase base (igual lógica del profe)
 class Circle {
-  constructor(x, y, radius, color, text, speed) {
-    this.posX = x;
-    this.posY = y;
+  constructor(x, y, radius, color, label, speed) {
+    this.x = x;
+    this.y = y;
     this.radius = radius;
     this.color = color;
-    this.text = text;
+    this.label = label;
 
     this.speed = speed;
 
-    this.dx = 1 * this.speed;
-    this.dy = 1 * this.speed;
+    this.dx = speed;
+    this.dy = speed;
   }
 
-  draw(context) {
-    context.beginPath();
+  draw(ctx) {
+    ctx.beginPath();
 
-    context.strokeStyle = this.color;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.font = "20px Arial";
-    context.fillText(this.text, this.posX, this.posY);
+    // relleno
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
 
-    context.lineWidth = 2;
-    context.arc(this.posX, this.posY, this.radius, 0, Math.PI * 2, false);
-    context.stroke();
-    context.closePath();
+    // borde
+    ctx.strokeStyle = "rgba(255,255,255,0.8)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.closePath();
+
+    // texto
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "14px Arial";
+    ctx.fillText(this.label, this.x, this.y);
   }
 
-  update(context) {
-    this.draw(context);
+  update(ctx) {
+    this.draw(ctx);
 
-    // DERECHA
-    if (this.posX + this.radius > window_width) {
-      this.posX = window_width - this.radius;
-      this.dx = -this.dx;
+    // límites (misma lógica que ya traías)
+    if (this.x + this.radius > canvasWidth) {
+      this.x = canvasWidth - this.radius;
+      this.dx *= -1;
     }
 
-    // IZQUIERDA
-    if (this.posX - this.radius < 0) {
-      this.posX = this.radius;
-      this.dx = -this.dx;
+    if (this.x - this.radius < 0) {
+      this.x = this.radius;
+      this.dx *= -1;
     }
 
-    // ARRIBA
-    if (this.posY - this.radius < 0) {
-      this.posY = this.radius;
-      this.dy = -this.dy;
+    if (this.y + this.radius > canvasHeight) {
+      this.y = canvasHeight - this.radius;
+      this.dy *= -1;
     }
 
-    // ABAJO
-    if (this.posY + this.radius > window_height) {
-      this.posY = window_height - this.radius;
-      this.dy = -this.dy;
+    if (this.y - this.radius < 0) {
+      this.y = this.radius;
+      this.dy *= -1;
     }
 
-    this.posX += this.dx;
-    this.posY += this.dy;
+    this.x += this.dx;
+    this.y += this.dy;
   }
 }
 
-/* let arrayCircle=[];
+// arreglo de círculos
+let listaCirculos = [];
 
-for(let i=0; i<10;i++){
+// generación
+function crearCirculos(num) {
+  listaCirculos = [];
 
-    let randomX =  Math.random()* window_width;
-    let randomY =  Math.random()* window_height;
-    let randomRadius = Math.floor(Math.random()*100 + 30);
+  for (let i = 0; i < num; i++) {
+    let r = Math.random() * 30 + 20;
 
-    let miCirculo = new Circle(randomX, randomY, randomRadius, 'blue', i+1);
+    let x = Math.random() * (canvasWidth - 2 * r) + r;
+    let y = Math.random() * (canvasHeight - 2 * r) + r;
 
-    //Agrega el objeto al array
-    arrayCircle.push(miCirculo);
-    arrayCircle[i].draw(ctx);
-} */
+    let color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+    let speed = Math.random() * 2 + 1;
 
-let randomX = Math.random() * window_width;
-let randomY = Math.random() * window_height;
-let randomRadius = Math.floor(Math.random() * 100 + 30);
+    listaCirculos.push(new Circle(x, y, r, color, i + 1, speed));
+  }
+}
 
-let miCirculo = new Circle(randomX, randomY, randomRadius, "blue", "Tec1", 5);
-miCirculo.draw(ctx);
+// aplicar cambios desde inputs
+function aplicarCambios() {
+  const cantidad = parseInt(document.getElementById("numCircles").value);
+  canvasWidth = parseInt(document.getElementById("canvasWidth").value);
+  canvasHeight = parseInt(document.getElementById("canvasHeight").value);
 
-let miCirculo2 = new Circle(randomX, randomY, randomRadius, "red", "Tec2", 2);
-miCirculo2.draw(ctx);
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
 
-let updateCircle = function () {
-  requestAnimationFrame(updateCircle);
-  ctx.clearRect(0, 0, window_width, window_height);
-  miCirculo.update(ctx);
-  miCirculo2.update(ctx);
-};
+  crearCirculos(cantidad);
+}
 
-updateCircle();
+// animación
+function animar() {
+  requestAnimationFrame(animar);
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+  listaCirculos.forEach(c => c.update(ctx));
+}
+
+// inicio
+aplicarCambios();
+animar();

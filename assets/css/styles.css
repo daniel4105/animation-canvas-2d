@@ -1,0 +1,51 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fondo */
+body {
+  background: url('../img/imagen.png') center/cover no-repeat fixed;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor tipo glass */
+.glass {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+}
+
+/* Canvas */
+canvas {
+  border-radius: 12px;
+  background: rgba(255,255,255,0.25);
+  max-width: 100%;
+}
+
+/* Footer */
+.footer {
+  margin-top: auto;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* Inputs */
+input.form-control {
+  border-radius: 6px;
+}
+
+/* Botones */
+button {
+  border-radius: 6px;
+  transition: 0.25s;
+}
+
+button:hover {
+  transform: scale(1.03);
+}
