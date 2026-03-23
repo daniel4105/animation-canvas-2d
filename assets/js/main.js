@@ -1,14 +1,15 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// dimensiones
 let canvasWidth = 600;
 let canvasHeight = 400;
 
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-// clase (basada en la anterior pero extendida)
+// dirección de origen
+let direccion = "top";
+
 class Circle {
   constructor(x, y, radius, color) {
     this.x = x;
@@ -19,7 +20,7 @@ class Circle {
     this.dx = (Math.random() - 0.5) * 2;
     this.dy = 0;
 
-    this.gravity = 0.4;
+    this.gravity = 0.2;
     this.friction = 0.6;
 
     this.life = 1;
@@ -53,13 +54,12 @@ class Circle {
     // suelo
     if (this.y + this.radius >= canvasHeight) {
       this.y = canvasHeight - this.radius;
-
       this.dy *= -this.friction;
       this.rebotes++;
 
       if (this.rebotes > 5) {
         this.dy = 0;
-        this.life -= 0.03;
+        this.life -= 0.02;
       }
     }
 
@@ -79,20 +79,47 @@ class Circle {
   }
 }
 
-// arreglo principal
+// lista
 let listaCirculos = [];
 let maxCirculos = 5;
 
-// generar uno
+// generar según dirección
 function crearCirculo() {
   let r = Math.random() * 30 + 20;
+  let x, y;
+  let dx = (Math.random() - 0.5) * 2;
+  let dy = 0;
 
-  let x = Math.random() * (canvasWidth - 2 * r) + r;
-  let y = -r;
+  if (direccion === "top") {
+    x = Math.random() * canvasWidth;
+    y = -r;
+  }
+
+  if (direccion === "bottom") {
+    x = Math.random() * canvasWidth;
+    y = canvasHeight + r;
+    dy = -3;
+  }
+
+  if (direccion === "left") {
+    x = -r;
+    y = Math.random() * canvasHeight;
+    dx = Math.random() * 3;
+  }
+
+  if (direccion === "right") {
+    x = canvasWidth + r;
+    y = Math.random() * canvasHeight;
+    dx = -Math.random() * 3;
+  }
 
   let color = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.4)`;
 
-  return new Circle(x, y, r, color);
+  let c = new Circle(x, y, r, color);
+  c.dx = dx;
+  c.dy = dy;
+
+  return c;
 }
 
 // aplicar cambios
@@ -101,13 +128,15 @@ function aplicarCambios() {
   canvasWidth = parseInt(document.getElementById("canvasWidth").value);
   canvasHeight = parseInt(document.getElementById("canvasHeight").value);
 
+  direccion = document.getElementById("direction").value;
+
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
   listaCirculos = [];
 }
 
-// spawner dinámico
+// spawner
 function spawn() {
   if (listaCirculos.length < maxCirculos) {
     listaCirculos.push(crearCirculo());
@@ -117,7 +146,7 @@ function spawn() {
     }
   }
 
-  let delay = Math.random() * 1000 + 200;
+  let delay = Math.random() * 1000 + 300;
   setTimeout(spawn, delay);
 }
 
